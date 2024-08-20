@@ -1,0 +1,164 @@
+---
+title: "Test Paramerized OHSS Report"
+format: html
+execute: 
+  echo: false
+  warning: false
+  message: false
+params:
+  ctzn: "honduras"
+editor: visual
+---
+
+```{r}
+#| label: load
+
+library(tidyverse)
+library(gapminder)
+library(quarto)
+removals <- read.csv("dhs_removals_ctzn.csv")
+admin <- read.csv("dhs_adminreturns_ctzn.csv")
+enf <- read.csv("dhs_enfreturns_ctzn.csv")
+ero <- read.csv("ero_arrests_ctzn.csv")
+cbp1 <- read.csv('cbp1_apt_ctzn.csv')
+ice_bkin <- read.csv('ice_bookins_ctzn.csv')
+ice_ero <- read.csv('ice_ero_rr_ctzn.csv')
+swb_credfear <- read.csv('swborder_credfear_ctzn.csv')
+options(scipen = 999)
+```
+
+```{r}
+#| label: tidy and plot function
+
+tidy_df <- function(df, ctzn){
+  tidier <- df |>
+    filter(month == "Total")|>
+    pivot_longer(!c(fiscal_year, month), names_to = "categories" , values_to = "count") |>
+    filter(categories == ctzn) |>
+    mutate(count = as.numeric(count)) |>
+    mutate(categories = str_to_title(categories)) |>
+    rename(totals = count, `Fiscal Year` = fiscal_year)
+
+
+  tidier_max <- max(tidier$totals)
+
+  tidier_max_fy <- tidier |>
+     filter(totals == tidier_max)
+
+  tidier_max_fy <- tidier_max_fy$`Fiscal Year`
+
+  out <- list(tidier, tidier_max, tidier_max_fy)
+  
+}
+
+
+plot_df <- function(long_df, ctzn, titler, ylabel){
+  plt <- ggplot(long_df, aes(x=`Fiscal Year`, y=totals, fill=categories))+
+    geom_bar(position = "stack", stat = "identity") +
+    labs(title = titler)+
+    ylab(ylabel)+
+    scale_y_continuous(labels = scales::comma)+
+    theme_minimal()+
+    theme(legend.position = "none")
+  plt
+}
+
+```
+
+## Removals of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: removal plot
+
+tidied <- tidy_df(removals, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "DHS Removals by FY", "Removals")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+
+```
+##### DHS conducted removals of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
+
+## Administrative Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: administrative returns plot
+tidied <- tidy_df(admin, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "DHS Administrative Returns by FY", "Returns")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+```
+##### DHS conducted removals of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
+
+## Enforcement Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: enforcement returns plot
+tidied <- tidy_df(enf, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "DHS Enforcement Returns by FY", "Returns")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+```
+##### DHS conducted enforcement returns of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
+
+## ERO Arrests of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: ERO arrests plot
+tidied <- tidy_df(ero, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "ICE ERO Arrests by FY", "Arrests")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+
+
+```
+##### DHS conducted arrests of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
+
+
+## CBP-One Appointments of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: CBP-One Appointments
+tidied <- tidy_df(cbp1, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "CBP-One Appointments by FY", "Appointments")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+```
+##### CBP opened appointments on it's CBP-One app for `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since the app was introduced in 2023.
+
+
+## ICE Book Ins of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: ICE Book Ins
+tidied <- tidy_df(ice_bkin, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "ICE Book Ins by FY", "Book Ins")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+```
+##### ICE booked in `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
+
+
+## ICE ERO Removals and Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+
+```{r}
+#| label: ICE ERO Removals and Returns
+tidied <- tidy_df(ice_ero, params$ctzn)
+tidied_df <- tidied[[1]]
+plt <- plot_df(tidied_df, params$ctzn, "ICE ERO Removals and Returns by FY", "Removals/Returns")
+max <- unlist(tidied[[2]])
+max_fy <- unlist(tidied[[3]])
+plt
+```
+##### ICE removed or returned `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
