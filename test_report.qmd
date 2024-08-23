@@ -6,7 +6,7 @@ execute:
   warning: false
   message: false
 params:
-  ctzn: "honduras"
+  ctzn: "india"
 editor: visual
 ---
 
@@ -23,7 +23,7 @@ ero <- read.csv("ero_arrests_ctzn.csv")
 cbp1 <- read.csv('cbp1_apt_ctzn.csv')
 ice_bkin <- read.csv('ice_bookins_ctzn.csv')
 ice_ero <- read.csv('ice_ero_rr_ctzn.csv')
-swb_credfear <- read.csv('swborder_credfear_ctzn.csv')
+#swb_credfear <- read.csv('swborder_credfear_ctzn.csv')
 options(scipen = 999)
 ```
 
@@ -46,8 +46,12 @@ tidy_df <- function(df, ctzn){
      filter(totals == tidier_max)
 
   tidier_max_fy <- tidier_max_fy$`Fiscal Year`
+  
+  fig_cond <- ifelse(nrow(tidier)>0, "all", 'none')
+  res_cond <- ifelse(nrow(tidier)>0, "TRUE", "hide")
 
-  out <- list(tidier, tidier_max, tidier_max_fy)
+
+  out <- list(tidier, tidier_max, tidier_max_fy, fig_cond, res_cond)
   
 }
 
@@ -65,100 +69,143 @@ plot_df <- function(long_df, ctzn, titler, ylabel){
 
 ```
 
-## Removals of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
+```{r} 
+#| label: conditional processer
 
-```{r}
+### Run tidy_df on each csv, if nrow>0, signal to run codeblock. Otherwise, signal to skip codeblock.
+#Removals
+out_removals<- tidy_df(removals, params$ctzn)
+cond_removals <- unlist(out_removals[[4]])
+res_removals <- unlist(out_removals[[5]])
+
+#Admin Returns
+out_admin <- tidy_df(admin, params$ctzn)
+cond_admin <- unlist(out_admin[[4]])
+res_admin <- unlist(out_admin[[5]])
+
+#Enforcement Returns
+out_enf <- tidy_df(enf, params$ctzn)
+cond_enf <- unlist(out_enf[[4]])
+res_enf <- unlist(out_enf[[5]])
+
+#ERO Arrests
+out_ero <- tidy_df(ero, params$ctzn)
+cond_ero <- unlist(out_ero[[4]])
+res_ero <- unlist(out_ero[[5]])
+
+#CBP-One Appointments
+out_cbp1 <- tidy_df(cbp1, params$ctzn)
+cond_cbp1 <- unlist(out_cbp1[[4]])
+res_cbp1 <- unlist(out_cbp1[[5]])
+
+#ICE Book Ins
+out_bkin <- tidy_df(ice_bkin, params$ctzn)
+cond_bkin <- unlist(out_bkin[[4]])
+res_bkin <- unlist(out_bkin[[5]])
+
+#ICE ERO Returns and Removals
+out_ice_ero <- tidy_df(ice_ero, params$ctzn)
+cond_ice_ero <- unlist(out_ice_ero[[4]])
+res_ice_ero <- unlist(out_ice_ero[[5]])
+```
+
+```{r, fig.keep=cond_removals, results=res_removals}
 #| label: removal plot
-
-tidied <- tidy_df(removals, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "DHS Removals by FY", "Removals")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("Removals of ", str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_removals[[1]]
+plt <- plot_df(df, params$ctzn, "DHS Removals by FY", "Removals")
+max <- unlist(out_removals[[2]])
+max_fy <- unlist(out_removals[[3]])
 plt
+cat(paste0("DHS conducted removals of ", scales::comma(max), 
+           " citizens of ", 
+           str_to_title(params$ctzn), 
+           " from the United States in ", 
+           max_fy, " the most in any fiscal year since 2014."))
 
 ```
-##### DHS conducted removals of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
 
-## Administrative Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_admin, results=res_admin}
 #| label: administrative returns plot
-tidied <- tidy_df(admin, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "DHS Administrative Returns by FY", "Returns")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("Administrative Returns of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_admin[[1]]
+plt <- plot_df(df, params$ctzn, "DHS Administrative Returns by FY", "Returns")
+max <- unlist(out_admin[[2]])
+max_fy <- unlist(out_admin[[3]])
 plt
+cat(paste0("DHS conducted administrative returns of ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2014."))
 ```
-##### DHS conducted removals of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
 
-## Enforcement Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_enf, results=res_enf}
 #| label: enforcement returns plot
-tidied <- tidy_df(enf, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "DHS Enforcement Returns by FY", "Returns")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("Enforcement Returns of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_enf[[1]]
+plt <- plot_df(df, params$ctzn, "DHS Enforcement Returns by FY", "Returns")
+max <- unlist(out_enf[[2]])
+max_fy <- unlist(out_enf[[3]])
 plt
+cat(paste0("DHS conducted enforcement returns of ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2014."))
 ```
-##### DHS conducted enforcement returns of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
 
-## ERO Arrests of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_ero, results=res_ero}
 #| label: ERO arrests plot
-tidied <- tidy_df(ero, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "ICE ERO Arrests by FY", "Arrests")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("ERO Arrests of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_ero[[1]]
+plt <- plot_df(df, params$ctzn, "ICE ERO Arrests by FY", "Arrests")
+max <- unlist(out_ero[[2]])
+max_fy <- unlist(out_ero[[3]])
 plt
-
+cat(paste0("DHS conducted arrests of ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2014."))
 
 ```
-##### DHS conducted arrests of `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
 
-
-## CBP-One Appointments of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_cbp1, results=res_cbp1}
 #| label: CBP-One Appointments
-tidied <- tidy_df(cbp1, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "CBP-One Appointments by FY", "Appointments")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("CBP-One Appointments of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_cbp1[[1]]
+plt <- plot_df(df, params$ctzn, "CBP-One Appointments by FY", "Appointments")
+max <- unlist(out_cbp1[[2]])
+max_fy <- unlist(out_cbp1[[3]])
 plt
+cat(paste0("CBP opened appointments on it's CBP-One app for ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2023."))
 ```
-##### CBP opened appointments on it's CBP-One app for `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since the app was introduced in 2023.
 
-
-## ICE Book Ins of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_bkin, results=res_bkin}
 #| label: ICE Book Ins
-tidied <- tidy_df(ice_bkin, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "ICE Book Ins by FY", "Book Ins")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("ICE Book Ins of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_bkin[[1]]
+plt <- plot_df(df, params$ctzn, "ICE Book Ins by FY", "Book Ins")
+max <- unlist(out_bkin[[2]])
+max_fy <- unlist(out_bkin[[3]])
 plt
+cat(paste0("ICE booked in ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2014."))
 ```
-##### ICE booked in `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
 
-
-## ICE ERO Removals and Returns of `r str_to_title(params$ctzn)` Citizens by Fiscal Year
-
-```{r}
+```{r, fig.keep=cond_ice_ero, results= res_ice_ero}
 #| label: ICE ERO Removals and Returns
-tidied <- tidy_df(ice_ero, params$ctzn)
-tidied_df <- tidied[[1]]
-plt <- plot_df(tidied_df, params$ctzn, "ICE ERO Removals and Returns by FY", "Removals/Returns")
-max <- unlist(tidied[[2]])
-max_fy <- unlist(tidied[[3]])
+cat(paste0("ICE ERO Removals and Returns of " , str_to_title(params$ctzn), " Citizens by Fiscal Year"))
+df <- out_ice_ero[[1]]
+plt <- plot_df(df, params$ctzn, "ICE ERO Removals and Returns by FY", "Removals/Returns")
+max <- unlist(out_ice_ero[[2]])
+max_fy <- unlist(out_ice_ero[[3]])
 plt
+cat(paste0("ICE removed or returned ", scales::comma(max), 
+           " citizens of ", str_to_title(params$ctzn), 
+           " from the United States in ", max_fy, 
+           " the most in any fiscal year since 2014."))
 ```
-##### ICE removed or returned `r scales::comma(max)` citizens of `r str_to_title(params$ctzn)` from the United States in `r max_fy`, the most in any fiscal year since 2014.
